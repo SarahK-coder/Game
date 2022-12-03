@@ -1,0 +1,34 @@
+.flex-container {
+    display: flex;
+    justify-content: flex-start; 
+    align-items: stretch; 
+    /* flex-flow: row nowrap; */ 
+    flex-direction: row; 
+    flex-wrap: nowrap; 
+    align-content: stretch;
+    background-color: #bbdefb;
+    height: 100%;
+    padding: 15px;
+    gap: 5px;
+  }
+
+  .flex-container > div{
+    background: #ffecb3;
+    border: 3px solid #ffcc80;
+    border-radius: 5px;
+    padding: 8px;
+  }
+
+  .game { 
+    /* flex:1 1 auto; */
+    order:0;
+    flex-grow:1;
+    align-self:auto;
+  }
+            
+  .instructions { 
+    /* flex:0 1 auto; */
+    order:0;
+    flex-grow:0;
+    align-self:auto;
+  }
