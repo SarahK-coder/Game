@@ -4,43 +4,43 @@ body {
 }
 
 .flex-container {
-    display: flex;
-    justify-content: flex-start; 
-    align-items: stretch; 
-    /* flex-flow: row nowrap; */ 
-    flex-direction: row; 
-    flex-wrap: nowrap; 
-    align-content: stretch;
-    background-color: #bbdefb;
-    height: 100vh;
-    padding: 0;
-    overflow: hidden;
-  }
+  display: flex;
+  justify-content: flex-start; 
+  align-items: stretch; 
+  /* flex-flow: row nowrap; */ 
+  flex-direction: row; 
+  flex-wrap: nowrap; 
+  align-content: stretch;
+  background-color: #bbdefb;
+  height: 100vh;
+  padding: 0;
+  overflow: hidden;
+}
 
-  .flex-container > div{
-    background: #ffecb3;
-    border: 3px solid #ffcc80;
-    border-radius: 5px;
-    padding: 0;
-    align-self: stretch;
-  }
+.flex-container > div{
+  background: #ffecb3;
+  border: 3px solid #ffcc80;
+  border-radius: 5px;
+  padding: 0;
+  align-self: stretch;
+}
 
-  #game { 
-    /* flex:1 1 auto; */
-    order: 0;
-    flex-grow: 1;
-    align-self: stretch;
-  }
+#game { 
+  /* flex:1 1 auto; */
+  order: 0;
+  flex-grow: 1;
+  align-self: stretch;
+}
             
-  .instructions { 
-    /* flex:0 1 auto; */
-    order: 0;
-    flex-grow: 0;
-    align-self: stretch;
-  }
+.instructions { 
+  /* flex:0 1 auto; */
+  order: 0;
+  flex-grow: 0;
+  align-self: stretch;
+}
 
-  #player {
-      background-color: #ff9900;
-      border: 1px solid #000;
-      position: absolute;
-  }
+#player {
+  background: url('../images/raccoon_blue.png') no-repeat;
+  background-size: contain;
+  position: absolute;
+}
