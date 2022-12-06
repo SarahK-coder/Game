@@ -1,31 +1,60 @@
 class Game {
     constructor() {
-        this.player = null;
+        // target element + width and height of this element
+        this.gameElm = document.getElementById("game");
+        this.gameElmWidth = this.gameElm.offsetWidth;
+        this.gameElmHeight = this.gameElm.offsetHeight;
 
-        this.time = 0; // time loop for create planes / bombs
+        this.player = null;
+        this.time = 0; // time loop to create planes / bombs
 
         this.planes = []; // will hold instances of the class Planes
         this.randomPlaneInterval = Math.floor(Math.random() * (200 - 100 + 1) + 100);
 
         this.bombs = []; // holds instances of class Bomb
-        this.randomBombInterval = Math.floor(Math.random() * (280 - 100 + 1) + 100);
+        this.randomBombInterval = Math.floor(Math.random() * (120 - 100 + 1) + 100);
 
-        this.gameStatus = null;
-        
+        // add game start div
+        this.startElement = document.createElement('div');
+        this.startElement.id = "start";
+        this.startElement.style.width = (this.gameElmWidth / 3) + "px";
+        this.startElement.style.height = (this.gameElmHeight / 4) + "px";
+        this.startElement.style.left = (this.gameElmWidth / 3) + "px";
+        this.startElement.style.top = (this.gameElmHeight / 3) + "px";
+        this.startElement.innerHTML = `
+            <button id="start-button">Play</button>
+        `;
+        this.gameElm.appendChild(this.startElement);
+
+        // add game restart div (but hide)
+        this.restartElement = document.createElement('div');
+        this.restartElement.id = "game-over";
+        this.restartElement.style.width = (this.gameElmWidth / 3) + "px";
+        this.restartElement.style.height = (this.gameElmHeight / 4) + "px";
+        this.restartElement.style.left = (this.gameElmWidth / 3) + "px";
+        this.restartElement.style.top = (this.gameElmHeight / 3) + "px";
+        this.restartElement.innerHTML = `
+            Game Over
+            <button id="restart-button">Play Again</button>
+        `;
+        this.restartElement.style.display = "none";
+        this.gameElm.appendChild(this.restartElement);
     }
-
-    start() {
-
-        
+    
+    start() {        
+        // check if start div is there, if so delete
+        if (document.getElementById("start")) {
+            document.getElementById("start").parentNode.removeChild(document.getElementById("start"));
+        }
+        // check if game over div is there, if so hide it
+        if (this.restartElement.style.display === "block") {
+            this.restartElement.style.display = "none";
+        }
         this.player = new Player();
         this.detectPlayerMovement();
-        //this.width = 20; // player width
-        //this.height = 75; // player height
-        //this.movementAmount = 1; // player movement amount
-
       
         // Create planes
-        setInterval(() => {
+        this.intervalPlaneId = setInterval(() => {
             this.time++;
             if (this.time % 10 === 0) {
                 if (this.planes.length < 2) { // limit to 1 plane for initial level / testing
@@ -36,7 +65,7 @@ class Game {
         }, this.randomPlaneInterval);
 
         // Move Planes
-        setInterval(() => {
+        this.intervalPlaneMoveId = setInterval(() => {
             this.planes.forEach((planeInstance) => {
                 // move current plane
                 planeInstance.moveLeft();
@@ -46,34 +75,32 @@ class Game {
         }, 10); // move plane every xxx ms
 
         // Create bombs
-        setInterval(() => {
+        this.intervalBombId = setInterval(() => {
             this.time++;
             if (this.time % 10 === 0) {
-                if (this.bombs.length < 4) { // limit to 1 bomb for initial level / testing
-                    this.planes.forEach((planeInstance) => {
-                        //only drop bombs when plane is within the boundries of the game
-                        if (planeInstance.positionX > 20 && planeInstance.positionX < (planeInstance.gameElmWidth - 20)) {
+                this.planes.forEach((planeInstance) => {
+                    // only drop bombs when plane is within the boundries of the game
+                    if (planeInstance.positionX > 20 && planeInstance.positionX < (planeInstance.gameElmWidth - 20)) {
+                        if (this.bombs.length < 10) {
                             const newBomb = new Bomb(planeInstance);
                             this.bombs.push(newBomb);
                         }
-                    });
-                }
+                    }
+                });
             }
         }, this.randomBombInterval);
 
         // Move Bombs
-        setInterval(() => {
+        this.intervalBombMoveId = setInterval(() => {
             this.bombs.forEach((bombInstance) => {
-                // move current plane
+                // move current bomb
                 bombInstance.moveDown();
-                
-                //detect if there's a collision between player and current obstacle
+                //detect if there's a collision between player and current bomb
                 this.detectBombHitsPlayer(bombInstance);
-
-                // check if we need to remove current plane
+                // check if we need to remove current bomb
                 this.removeBombIfOutside(bombInstance);
             });
-        }, 25);
+        }, 10);
 
     }
 
@@ -92,7 +119,7 @@ class Game {
     removePlaneIfOutside(planeInstance) {
         this.gameElmWidth = document.getElementById("game").offsetWidth;
         if (planeInstance.positionX >= this.gameElmWidth + (planeInstance.width / 2)) {
-            planeInstance.domElement.remove(); // remove dom element
+            planeInstance.planeElement.remove(); // remove dom element
             for (let i=0; i < this.planes.length; i++) {
                 if (this.planes[i] === planeInstance) {
                     this.planes.splice(i, 1); // removes the instance at the index of the array
@@ -110,9 +137,14 @@ class Game {
             this.player.positionY < bombInstance.positionY + bombInstance.height &&
             this.player.height + this.player.positionY > bombInstance.positionY
         ) {
-            for (let i = 1; i < 99999; i++) {
-                window.clearInterval(i);
-            }
+            // remove all planes and bombs
+            this.planes = [];
+            this.bombs = [];
+            // clear all intervals
+            clearInterval(this.intervalPlaneId);
+            clearInterval(this.intervalPlaneMoveId);
+            clearInterval(this.intervalBombId);
+            clearInterval(this.intervalBombMoveId);
             this.gameOver();
         }
     }
@@ -120,9 +152,9 @@ class Game {
     // remove bomb if it's outside the game div
     removeBombIfOutside(bombInstance) {
         if (bombInstance.positionY <= -5) {
-            bombInstance.domElement.remove(); // remove dom element
+            bombInstance.bombElement.remove(); // remove dom element
             for (let i=0; i < this.bombs.length; i++) {
-                if(this.bombs[i] === bombInstance) {
+                if (this.bombs[i] === bombInstance) {
                     this.bombs.splice(i, 1); // removes the instance at the index of the array
                     i--;
                 }
@@ -132,26 +164,11 @@ class Game {
     
     // Game Over
     gameOver() {
-		console.log("GAME OVER !!! ");
-        
-        // target element + width and height of this element
-        this.gameElm = document.getElementById("game");
-        this.gameElmWidth = this.gameElm.offsetWidth;
-        this.gameElmHeight = this.gameElm.offsetHeight;
-
-
-        this.domElement = document.createElement('div');
-        this.domElement.id = "game-over";
-        this.domElement.style.width = (this.gameElmWidth / 3) + "px";
-        this.domElement.style.height = (this.gameElmHeight / 4) + "px";
-        this.domElement.style.left = (this.gameElmWidth / 3) + "px";
-        this.domElement.style.top = (this.gameElmHeight / 3) + "px";
-        this.domElement.innerHTML = `
-        Game Over
-        <button>Restart</button>
-        `; // add an eventlistener to reload game
-        //step3: append to the dom: `parentElm.appendChild()`
-        this.gameElm.appendChild(this.domElement);
+        this.restartElement.style.display = "block";
+        // Remove all bombs, planes and player
+        Array.from(document.querySelectorAll(".bomb")).forEach((el) => el.parentNode.removeChild(el));
+        Array.from(document.querySelectorAll(".plane")).forEach((el) => el.parentNode.removeChild(el));
+        document.getElementById("player").parentNode.removeChild(document.getElementById("player"));
 	}
     
 }
@@ -167,45 +184,39 @@ class Player {
         this.height = 75;
         this.positionX = this.gameElmWidth - (this.gameElmWidth / 2);
         this.positionY = 0;
-        this.movementAmount = 10;
+        this.movementAmount = 5;
 
-        this.domElement = null;
+        this.playerElement = null;
         this.createDomElement();
     }
 
-    createDomElement() {        
-        // step1: create the element:
-        this.domElement = document.createElement('div');
-
-        // step2: add content or modify (ex. innerHTML...)
-        this.domElement.id = "player";
-        this.domElement.style.width = this.width + "px";
-        this.domElement.style.height = this.height + "px";
-        this.domElement.style.left = this.positionX + "px";
-        this.domElement.style.bottom = this.positionY + "px";
-
-        //step3: append to the dom: `parentElm.appendChild()`
-        this.gameElm.appendChild(this.domElement);
+    createDomElement() {
+        this.playerElement = document.createElement('div');
+        this.playerElement.id = "player";
+        this.playerElement.style.width = this.width + "px";
+        this.playerElement.style.height = this.height + "px";
+        this.playerElement.style.left = this.positionX + "px";
+        this.playerElement.style.bottom = this.positionY + "px";
+        this.gameElm.appendChild(this.playerElement);
     }
 
     moveLeft() {
         if (this.positionX > 0) {
             this.positionX = this.positionX - this.movementAmount;
-            this.domElement.style.left = this.positionX + "px";
+            this.playerElement.style.left = this.positionX + "px";
         }
     }
 
     moveRight() {
         if (this.positionX < (this.gameElmWidth - this.width)) {
             this.positionX = this.positionX + this.movementAmount;
-            this.domElement.style.left = this.positionX + "px";
+            this.playerElement.style.left = this.positionX + "px";
         }
     }
 }
 
 class Plane {
     constructor() {
-        // target element + width and height of this element
         this.gameElm = document.getElementById("game");
         this.gameElmWidth = this.gameElm.offsetWidth;
         this.gameElmHeight = this.gameElm.offsetHeight;
@@ -215,33 +226,26 @@ class Plane {
         this.positionY = Math.floor(Math.random() * ((this.gameElmHeight - this.height) - (this.gameElmHeight / 2) + 1) + (this.gameElmHeight / 2));
         this.movementAmount = Math.floor(Math.random() * (5 - 1 + 1) + 1);
 
-        this.domElement = null;
+        this.planeElement = null;
         this.createDomElement();
     }
     createDomElement() {
-        // step1: create the element:
-        this.domElement = document.createElement('div');
-
-        // step2: add content or modify (ex. innerHTML...)
-        this.domElement.className = "plane";
-        this.domElement.style.width = this.width + "px";
-        this.domElement.style.height = this.height + "px";
-        this.domElement.style.bottom = this.positionY + "px";
-        this.domElement.style.left = this.positionX - this.width + "px";
-
-        //step3: append to the dom: `parentElm.appendChild()`
-        const boardElm = document.getElementById("game");
-        boardElm.appendChild(this.domElement);
+        this.planeElement = document.createElement('div');
+        this.planeElement.className = "plane";
+        this.planeElement.style.width = this.width + "px";
+        this.planeElement.style.height = this.height + "px";
+        this.planeElement.style.bottom = this.positionY + "px";
+        this.planeElement.style.left = this.positionX - this.width + "px";
+        this.gameElm.appendChild(this.planeElement);
     }
     moveLeft() {
         this.positionX = this.positionX + this.movementAmount;
-        this.domElement.style.left = this.positionX + "px";
+        this.planeElement.style.left = this.positionX + "px";
     }
 }
 
 class Bomb {
     constructor(plane) {
-        // target element + width and height of this element
         this.gameElm = document.getElementById("game");
         this.gameElmWidth = this.gameElm.offsetWidth;
         this.gameElmHeight = this.gameElm.offsetHeight;
@@ -250,35 +254,39 @@ class Bomb {
         this.planePositionX = plane.positionX;
         this.planePositionY = plane.positionY;
 
-        this.width = 10;
-        this.height = 30;
+        this.width = 13;
+        this.height = 40;
         this.positionX = this.planePositionX; // plane position X
         this.positionY = this.planePositionY; // plane position y
-        this.movementAmount = Math.floor(Math.random() * (5 - 1 + 1) + 1);
+        this.movementAmount = Math.floor(Math.random() * (9 - 3 + 1) + 3);
 
-        this.domElement = null;
+        this.bombElement = null;
         this.createDomElement();
     }
     createDomElement() {
-        // step1: create the element:
-        this.domElement = document.createElement('div');
-
-        // step2: add content or modify (ex. innerHTML...)
-        this.domElement.className = "bomb";
-        this.domElement.style.width = this.width + "px";
-        this.domElement.style.height = this.height + "px";
-        this.domElement.style.bottom = this.positionY + "vh";
-        this.domElement.style.left = this.positionX + "px";
-
-        //step3: append to the dom: `parentElm.appendChild()`
-        this.gameElm.appendChild(this.domElement);
+        this.bombElement = document.createElement('div');
+        this.bombElement.className = "bomb";
+        this.bombElement.style.width = this.width + "px";
+        this.bombElement.style.height = this.height + "px";
+        this.bombElement.style.bottom = this.positionY + "vh";
+        this.bombElement.style.left = this.positionX + "px";
+        this.gameElm.appendChild(this.bombElement);
     }
     moveDown() {
         this.positionY = this.positionY - this.movementAmount;
-        this.domElement.style.bottom = this.positionY + "px";
-
+        this.bombElement.style.bottom = this.positionY + "px";
     }
 }
 
 const game = new Game();
-game.start();
+
+const startButton = document.getElementById("start-button");
+
+const restartButton = document.getElementById("restart-button");
+
+startButton.addEventListener("click", () => {
+    game.start();
+});
+restartButton.addEventListener("click", () => {
+    game.start();
+});
