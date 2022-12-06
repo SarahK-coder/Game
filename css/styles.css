@@ -65,9 +65,9 @@ body {
 }
 
 .bomb {
-  background-color: #ff0000;
+  background: url('../images/bomb_yellow.png') no-repeat;
+  background-size: contain;
   position: absolute;
-  border: 1px solid #000;
   z-index: 3;
 }
 
@@ -82,9 +82,33 @@ body {
   border-radius: 25px;
   z-index: 100;
   position: absolute;
+  display:block
 }
 
-#game-over button {
+#restart-button {
+  color: #fff;
+  background-color: #1cc733;
+  border: 3px solid #fff;
+  padding: 5px 15px;
+  border-radius: 15px;
+  position: relative;
+  margin-top: -10px;
+}
+
+#start {
+  color: #fff;
+  font-family: 'Anton', Times, serif;
+  font-size: 4.5rem;
+  text-align: center;
+  vertical-align: middle;
+  background-color: #ff0000;
+  border: 5px solid #fff;
+  border-radius: 25px;
+  z-index: 100;
+  position: absolute;
+}
+
+#start-button {
   color: #fff;
   background-color: #1cc733;
   border: 3px solid #fff;
