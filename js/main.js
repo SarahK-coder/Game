@@ -14,6 +14,8 @@ class Game {
         this.bombs = []; // holds instances of class Bomb
         this.randomBombInterval = Math.floor(Math.random() * (120 - 100 + 1) + 100);
 
+        this.bullets = []; // holds instances of class Bullet
+
         // add game start div
         this.startElement = document.createElement('div');
         this.startElement.id = "start";
@@ -100,16 +102,15 @@ class Game {
                 // check if we need to remove current bomb
                 this.removeBombIfOutside(bombInstance);
             });
-        }, 10);
-
+        }, 30);
     }
 
     // detect Player movement (Left / Right)
     detectPlayerMovement() {
         document.addEventListener('keydown', (event) => {
-            if (event.key === "ArrowRight") {
+            if (event.key === "ArrowRight" || event.key === "x") {
                 this.player.moveRight();
-            } else if (event.key === "ArrowLeft") {
+            } else if (event.key === "ArrowLeft" || event.key === "z") {
                 this.player.moveLeft();
             }
         });
@@ -137,14 +138,16 @@ class Game {
             this.player.positionY < bombInstance.positionY + bombInstance.height &&
             this.player.height + this.player.positionY > bombInstance.positionY
         ) {
-            // remove all planes and bombs
+            // remove all planes, bullets and bombs
             this.planes = [];
+            this.bullets = [];
             this.bombs = [];
             // clear all intervals
             clearInterval(this.intervalPlaneId);
             clearInterval(this.intervalPlaneMoveId);
             clearInterval(this.intervalBombId);
             clearInterval(this.intervalBombMoveId);
+            clearInterval(this.intervalBulletId);
             this.gameOver();
         }
     }
@@ -164,10 +167,12 @@ class Game {
     
     // Game Over
     gameOver() {
+        // show the Game Over div
         this.restartElement.style.display = "block";
-        // Remove all bombs, planes and player
+        // Remove all bombs, planes, bullets and player
         Array.from(document.querySelectorAll(".bomb")).forEach((el) => el.parentNode.removeChild(el));
         Array.from(document.querySelectorAll(".plane")).forEach((el) => el.parentNode.removeChild(el));
+        Array.from(document.querySelectorAll(".bullet")).forEach((el) => el.parentNode.removeChild(el));
         document.getElementById("player").parentNode.removeChild(document.getElementById("player"));
 	}
     
@@ -185,12 +190,14 @@ class Player {
         this.positionX = this.gameElmWidth - (this.gameElmWidth / 2);
         this.positionY = 0;
         this.movementAmount = 5;
+        this.duration = 80;
+        this.frameDistance = this.movementAmount / (this.duration / 100);
 
         this.playerElement = null;
-        this.createDomElement();
+        this.createPlayerElement();
     }
 
-    createDomElement() {
+    createPlayerElement() {
         this.playerElement = document.createElement('div');
         this.playerElement.id = "player";
         this.playerElement.style.width = this.width + "px";
@@ -202,16 +209,53 @@ class Player {
 
     moveLeft() {
         if (this.positionX > 0) {
-            this.positionX = this.positionX - this.movementAmount;
+            this.positionX = this.positionX - (this.movementAmount + this.frameDistance);
             this.playerElement.style.left = this.positionX + "px";
         }
     }
 
     moveRight() {
         if (this.positionX < (this.gameElmWidth - this.width)) {
-            this.positionX = this.positionX + this.movementAmount;
+            this.positionX = this.positionX + (this.movementAmount + this.frameDistance);
             this.playerElement.style.left = this.positionX + "px";
         }
+    }
+}
+
+class Bullet {
+    constructor(player) {
+        // target element + width and height of this element
+        this.gameElm = document.getElementById("game");
+        this.gameElmWidth = this.gameElm.offsetWidth;
+        this.gameElmHeight = this.gameElm.offsetHeight;
+        
+        // bullet styles / positioning
+        this.width = 6;
+        this.height = 6;
+        //this.positionX = Player.positionX;
+        //this.positionY = Player.positionY + Player.height;
+        this.positionX = this.gameElmWidth - (this.gameElmWidth / 2);
+        this.positionY = 0;
+        this.movementAmount = 4;
+
+        this.bulletElement = null;
+        this.createBulletElement();
+    }
+
+    createBulletElement() {
+        // create bullets
+        this.bulletElement = document.createElement('div');
+        this.bulletElement.className = "bullet";
+        this.bulletElement.style.width = this.width + "px";
+        this.bulletElement.style.height = this.height + "px";
+        this.bulletElement.style.bottom = this.positionY + "px";
+        this.bulletElement.style.left = this.positionX + "px";
+        this.gameElm.appendChild(this.bulletElement);
+    }
+
+    shoot() {
+        this.positionY = this.positionY + this.movementAmount;
+        this.bulletElement.style.bottom = this.positionY + "px";
     }
 }
 
@@ -227,9 +271,9 @@ class Plane {
         this.movementAmount = Math.floor(Math.random() * (5 - 1 + 1) + 1);
 
         this.planeElement = null;
-        this.createDomElement();
+        this.createPlaneElement();        
     }
-    createDomElement() {
+    createPlaneElement() {
         this.planeElement = document.createElement('div');
         this.planeElement.className = "plane";
         this.planeElement.style.width = this.width + "px";
@@ -261,9 +305,9 @@ class Bomb {
         this.movementAmount = Math.floor(Math.random() * (9 - 3 + 1) + 3);
 
         this.bombElement = null;
-        this.createDomElement();
+        this.createBombElement();
     }
-    createDomElement() {
+    createBombElement() {
         this.bombElement = document.createElement('div');
         this.bombElement.className = "bomb";
         this.bombElement.style.width = this.width + "px";
@@ -281,7 +325,6 @@ class Bomb {
 const game = new Game();
 
 const startButton = document.getElementById("start-button");
-
 const restartButton = document.getElementById("restart-button");
 
 startButton.addEventListener("click", () => {
