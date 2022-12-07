@@ -8,7 +8,7 @@ class Game {
         this.player = null;
         this.time = 0; // time loop to create planes / bombs
 
-        this.planes = []; // will hold instances of the class Planes
+        this.planes = []; // holds instances of the class Planes
         this.randomPlaneInterval = Math.floor(Math.random() * (200 - 100 + 1) + 100);
 
         this.bombs = []; // holds instances of class Bomb
@@ -54,12 +54,14 @@ class Game {
         }
         this.player = new Player();
         this.detectPlayerMovement();
+        //this.bullets = new Bullet();
+        this.detectPlayerShooting();
       
         // Create planes
         this.intervalPlaneId = setInterval(() => {
             this.time++;
             if (this.time % 10 === 0) {
-                if (this.planes.length < 2) { // limit to 1 plane for initial level / testing
+                if (this.planes.length < 2) { // adjust this to an amount of planes wanted on screen
                     const newPlane = new Plane();
                     this.planes.push(newPlane);
                 }
@@ -103,15 +105,39 @@ class Game {
                 this.removeBombIfOutside(bombInstance);
             });
         }, 30);
+        
+        
+        // Move Bullets
+        this.intervalBulletMoveId = setInterval(() => {
+            this.bullets.forEach((bulletInstance) => {
+                // move current bullet
+                bulletInstance.shoot();
+                // check if we need to remove current bullet
+                this.removeBulletIfOutside(bulletInstance);
+                //detect if there's a collision between player and current bullet
+                this.detectBulletHitsPlane(bulletInstance);
+            });
+        }, 0);
+
     }
 
     // detect Player movement (Left / Right)
-    detectPlayerMovement() {
-        document.addEventListener('keydown', (event) => {
+    detectPlayerMovement() { // set interval?????
+        document.addEventListener('keypress', (event) => {
             if (event.key === "ArrowRight" || event.key === "x") {
                 this.player.moveRight();
             } else if (event.key === "ArrowLeft" || event.key === "z") {
                 this.player.moveLeft();
+            }
+        });
+    }
+
+    // detect player shooting
+    detectPlayerShooting() {
+        document.addEventListener('click', () => {
+            if (this.bullets.length < 1) {
+                const newBullet = new Bullet();
+                this.bullets.push(newBullet);
             }
         });
     }
@@ -130,8 +156,64 @@ class Game {
         }
     }
 
+    // remove bomb if it's outside the game div
+    removeBombIfOutside(bombInstance) {
+        if (bombInstance.positionY <= -5) {
+            bombInstance.bombElement.remove(); // remove dom element
+            for (let i=0; i < this.bombs.length; i++) {
+                if (this.bombs[i] === bombInstance) {
+                    this.bombs.splice(i, 1); // removes the instance at the index of the array
+                    i--;
+                }
+            }
+        }
+    }
+
+    // remove bullet if it's outside the game div
+    removeBulletIfOutside(bulletInstance) {
+        this.gameElmWidth = document.getElementById("game").offsetWidth;
+        if (bulletInstance.positionY >= this.gameElmHeight + (bulletInstance.height / 2)) {
+            bulletInstance.bulletElement.remove(); // remove dom element
+            for (let i=0; i < this.bullets.length; i++) {
+                if (this.bullets[i] === bulletInstance) {
+                    this.bullets.splice(i, 1); // removes the instance at the index of the array
+                    i--;
+                }
+            }
+        }
+    }
+    
+    // if bullet hits plane -> Remove Plane
+    detectBulletHitsPlane(bulletInstance) {
+        this.planes.forEach((planeInstance) => {
+            
+            if (
+                planeInstance.positionX < bulletInstance.positionX + bulletInstance.width &&
+                planeInstance.positionX + planeInstance.width > bulletInstance.positionX &&
+                planeInstance.positionY < bulletInstance.positionY + bulletInstance.height &&
+                planeInstance.height + planeInstance.positionY > bulletInstance.positionY
+            ) {
+                planeInstance.planeElement.remove(); // remove dom element
+                for (let i=0; i < this.planes.length; i++) {
+                    if (this.planes[i] === planeInstance) {
+                        this.planes.splice(i, 1); // removes the instance at the index of the array
+                        i--;
+                    }
+                }
+                bulletInstance.bulletElement.remove(); // remove dom bullet element
+                for (let i=0; i <this.bullets.length; i++) {
+                    if (this.bullets[i] === bulletInstance) {
+                        this.bullets.splice(i, 1); // removes instance from array
+                        i--;
+                    }
+                }
+            }
+        });
+        
+    }
+
     // if bomb hits player -> Game Over
-    detectBombHitsPlayer(bombInstance){
+    detectBombHitsPlayer(bombInstance) {
         if (
             this.player.positionX < bombInstance.positionX + bombInstance.width &&
             this.player.positionX + this.player.width > bombInstance.positionX &&
@@ -149,19 +231,6 @@ class Game {
             clearInterval(this.intervalBombMoveId);
             clearInterval(this.intervalBulletId);
             this.gameOver();
-        }
-    }
-
-    // remove bomb if it's outside the game div
-    removeBombIfOutside(bombInstance) {
-        if (bombInstance.positionY <= -5) {
-            bombInstance.bombElement.remove(); // remove dom element
-            for (let i=0; i < this.bombs.length; i++) {
-                if (this.bombs[i] === bombInstance) {
-                    this.bombs.splice(i, 1); // removes the instance at the index of the array
-                    i--;
-                }
-            }
         }
     }
     
@@ -228,15 +297,19 @@ class Bullet {
         this.gameElm = document.getElementById("game");
         this.gameElmWidth = this.gameElm.offsetWidth;
         this.gameElmHeight = this.gameElm.offsetHeight;
+        // player element
+        this.playerElm = document.getElementById("player");
+        this.playerElmWidth = this.playerElm.offsetWidth;
+        this.playerElmHeight = this.playerElm.offsetHeight;
+        this.playerElmPositionX = this.playerElm.offsetLeft;
         
         // bullet styles / positioning
         this.width = 6;
         this.height = 6;
-        //this.positionX = Player.positionX;
-        //this.positionY = Player.positionY + Player.height;
-        this.positionX = this.gameElmWidth - (this.gameElmWidth / 2);
-        this.positionY = 0;
-        this.movementAmount = 4;
+        this.positionX = this.playerElmPositionX + (this.playerElmWidth / 2); // position where player is
+        this.positionY = this.playerElmHeight / 2; // position where player is
+        this.movementAmount = 10;
+        this.maxMovementAmount = 15;
 
         this.bulletElement = null;
         this.createBulletElement();
@@ -254,6 +327,9 @@ class Bullet {
     }
 
     shoot() {
+        if (this.movementAmount < this.maxMovementAmount) {
+            this.movementAmount++;
+        }
         this.positionY = this.positionY + this.movementAmount;
         this.bulletElement.style.bottom = this.positionY + "px";
     }
