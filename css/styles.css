@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css?family=Anton&display=swap');
-@import url('https://fonts.googleapis.com/css?family=Quicksand&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
 body {
+  font-family: 'Roboto', Times, serif;
   padding: 0;
   margin: 0;
   overflow: hidden;
@@ -20,7 +20,7 @@ body {
 }
 
 .flex-container > div{
-  background: #ffecb3;
+  background: #efefef;
   border: 3px solid #ffcc80;
   border-radius: 5px;
   padding: 0;
@@ -29,11 +29,9 @@ body {
 }
 
 #game {
-  background: url('../images/landscape1.png') no-repeat;
-  background-size: cover;
   /* flex:1 1 auto; */
   order: 0;
-  flex-grow: 1;
+  flex-grow: 2;
   align-self: stretch;
   overflow: hidden;
   z-index: 0;
@@ -42,16 +40,21 @@ body {
 .instructions { 
   /* flex:0 1 auto; */
   order: 0;
-  flex-grow: 0;
+  flex-grow: 0.3;
   align-self: stretch;
   overflow: hidden;
   z-index: 100;
+  text-align: center;
+  align-content: center;
 }
 
+.instructions>h1 {
+  color: #000;
+  font-size: 3.5rem;
+}
+
+
 #player {
-  /*background: url('../images/raccoon_blue.png') no-repeat;*/
-  /*background: url('../images/raccoon_soldier.png') no-repeat;*/
-  background: url('../images/raccoon_viking.png') no-repeat;
   background-size: contain;
   position: absolute;
   z-index: 5;
@@ -65,16 +68,12 @@ body {
 }
 
 .bomb {
-  background: url('../images/bomb_yellow.png') no-repeat;
   background-size: contain;
   position: absolute;
   z-index: 3;
 }
 
 #game-over {
-  color: #fff;
-  font-family: 'Anton', Times, serif;
-  font-size: 4.5rem;
   text-align: center;
   vertical-align: middle;
   background-color: #ff0000;
@@ -82,23 +81,28 @@ body {
   border-radius: 25px;
   z-index: 100;
   position: absolute;
-  display:block
+  display: inline-block;
+}
+
+#game-over>h1 {
+  color: #fff;
+  font-size: 3.5rem;
+  line-height: 2.5rem;
 }
 
 #restart-button {
   color: #fff;
+  font-size: 2.5rem;
   background-color: #1cc733;
   border: 3px solid #fff;
   padding: 5px 15px;
   border-radius: 15px;
   position: relative;
-  margin-top: -10px;
+  margin: -10px 0 0 0;
 }
 
 #start {
   color: #fff;
-  font-family: 'Anton', Times, serif;
-  font-size: 4.5rem;
   text-align: center;
   vertical-align: middle;
   background-color: #ff0000;
@@ -110,17 +114,63 @@ body {
 
 #start-button {
   color: #fff;
+  font-size: 2.5rem;
   background-color: #1cc733;
   border: 3px solid #fff;
   padding: 5px 15px;
   border-radius: 15px;
   position: relative;
+  margin: 20% 0 0 0;
 }
 
 .bullet {
-  background-color: #ffee00;
+  background: url('../images/bullet.png') no-repeat;
   background-size: contain;
   position: absolute;
   z-index: 1;
-  border: 1px solid #000;
+}
+
+#logo {
+  box-sizing: border-box;
+  height: 30vh;
+  background: url('../images/raccoons_attack_logo.png') no-repeat center;
+  background-size: contain;
+  z-index: 5;
+}
+
+#keyboard {
+  box-sizing: border-box;
+  height: 20vh;
+  background: url('../images/keys.png') no-repeat center;
+  background-size: contain;
+  z-index: 5;
+}
+
+#use-mouse {
+  box-sizing: border-box;
+  height: 20vh;
+  background: url('../images//mouse_shoot.png') no-repeat center;
+  background-size: contain;
+  z-index: 5;
+}
+
+#score-box {
+  color: #fff;
+  background-color: #1cc733;
+  border: 3px solid #fff;
+  padding: 5px 15px;
+  border-radius: 15px;
+  position: absolute;
+}
+
+#score-box>span {
+  font-size: 1.5rem;
+  display: inline;
+  vertical-align: middle;
+}
+
+#score {
+  display: inline;
+  font-size: 2.5rem;
+  vertical-align: middle;
 }
