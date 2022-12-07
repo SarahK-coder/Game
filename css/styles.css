@@ -54,7 +54,7 @@ body {
   background: url('../images/raccoon_viking.png') no-repeat;
   background-size: contain;
   position: absolute;
-  z-index: 1;
+  z-index: 5;
 }
 
 .plane {
@@ -115,4 +115,12 @@ body {
   padding: 5px 15px;
   border-radius: 15px;
   position: relative;
+}
+
+.bullet {
+  background-color: #ffee00;
+  background-size: contain;
+  position: absolute;
+  z-index: 1;
+  border: 1px solid #000;
 }
