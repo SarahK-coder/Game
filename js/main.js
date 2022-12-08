@@ -1,16 +1,18 @@
 class Game {
     constructor() {
-        this.randomBackgroundImg = Math.floor(Math.random() * (3 - 1 + 1) + 1);
+        this.randomBackgroundImg = Math.floor(Math.random() * (4 - 1 + 1) + 1);
         this.gameElm = document.getElementById("game");
         this.gameElm.style.background = `url('./images/landscape${this.randomBackgroundImg}.png') no-repeat`;
         this.gameElm.style.backgroundSize = "cover";
         this.gameElm.style.backgroundPosition = "center bottom"
         this.gameElmWidth = this.gameElm.offsetWidth;
         this.gameElmHeight = this.gameElm.offsetHeight;
+        // gameStatus: false = not started, true = started
+        this.gameStatus = false;
         
         this.player = null;
         this.time = 0;
-
+        // score div
         this.score = 0;
         this.scoreMainElement = document.createElement('div');
         this.scoreMainElement.id = "score-box";
@@ -28,7 +30,7 @@ class Game {
         this.randomBombInterval = Math.floor(Math.random() * (120 - 100 + 1) + 100);
 
         this.bullets = [];
-
+        // start div
         this.startElement = document.createElement('div');
         this.startElement.id = "start";
         this.startElement.style.width = (this.gameElmWidth / 3) + "px";
@@ -39,7 +41,7 @@ class Game {
             <button id="start-button">Play</button>
         `;
         this.gameElm.appendChild(this.startElement);
-
+        // restart div
         this.restartElement = document.createElement('div');
         this.restartElement.id = "game-over";
         this.restartElement.style.width = (this.gameElmWidth / 3) + "px";
@@ -68,29 +70,32 @@ class Game {
         this.detectPlayerMovement();
         this.detectPlayerShooting();
 
+        // Create planes
         this.intervalPlaneId = setInterval(() => {
             this.time++;
             if (this.time % 10 === 0) {
-                if (this.planes.length < 3) {
+                if (this.planes.length < 3) { // adjust this to an amount of planes wanted on screen
                     const newPlane = new Plane();
                     this.planes.push(newPlane);
                 }
             }
         }, this.randomPlaneInterval);
 
+        // Move Planes
         this.intervalPlaneMoveId = setInterval(() => {
             this.planes.forEach((planeInstance) => {
-                planeInstance.moveLeft();
+                planeInstance.move();
                 this.removePlaneIfOutside(planeInstance);
             });
         }, 10);
 
+        // Create Bombs
         this.intervalBombId = setInterval(() => {
             this.time++;
             if (this.time % 10 === 0) {
                 this.planes.forEach((planeInstance) => {
-                    if (planeInstance.positionX > 5 && planeInstance.positionX < (planeInstance.gameElmWidth - 20)) {
-                        if (this.bombs.length < 15) {
+                    if (planeInstance.positionX > 5 && planeInstance.positionX < planeInstance.gameElmWidth) {
+                        if (this.bombs.length < 30) {
                             const newBomb = new Bomb(planeInstance);
                             this.bombs.push(newBomb);
                         }
@@ -99,24 +104,27 @@ class Game {
             }
         }, this.randomBombInterval);
 
+        // Move Bombs
         this.intervalBombMoveId = setInterval(() => {
-            this.bombs.forEach((bombInstance) => {
+            this.bombs.forEach((bombInstance, index) => {
                 bombInstance.moveDown();
                 this.detectBombHitsPlayer(bombInstance);
-                this.removeBombIfOutside(bombInstance);
+                this.removeBombIfOutside(bombInstance, index);
             });
         }, 30);
-
+        
+        // Move Bullet
         this.intervalBulletMoveId = setInterval(() => {
             this.bullets.forEach((bulletInstance) => {
-                bulletInstance.shoot();
+                bulletInstance.moveUp();
                 this.removeBulletIfOutside(bulletInstance);
                 this.detectBulletHitsPlane(bulletInstance);
             });
-        }, 0);
+        });
 
     }
 
+    // Player eventlistener
     detectPlayerMovement() {
         document.addEventListener('keypress', (event) => {
             if (event.key === "ArrowRight" || event.key === "x") {
@@ -134,18 +142,20 @@ class Game {
         });
     }
 
+    // Shooting eventlistener
     detectPlayerShooting() {
         document.addEventListener('click', () => {
-            if (this.bullets.length < 1) {
+            if (this.gameStatus === true && this.bullets.length < 1) {
                 const newBullet = new Bullet();
                 this.bullets.push(newBullet);
             }
         });
     }
 
+    // Remove planeInstance if it's outside the game div
     removePlaneIfOutside(planeInstance) {
         this.gameElmWidth = document.getElementById("game").offsetWidth;
-        if (planeInstance.positionX >= this.gameElmWidth + (planeInstance.width / 2)) {
+        if ((planeInstance.planeElement.className === "plane move-left") && (planeInstance.positionX > this.gameElmWidth) || (planeInstance.positionX < -180) && (planeInstance.planeElement.className === "plane move-right")) {
             planeInstance.planeElement.remove();
             for (let i=0; i < this.planes.length; i++) {
                 if (this.planes[i] === planeInstance) {
@@ -155,19 +165,21 @@ class Game {
             }
         }
     }
-
+    
+    // Remove bombInstance if it's outside the game div
     removeBombIfOutside(bombInstance) {
         if (bombInstance.positionY <= -5) {
-            bombInstance.bombElement.remove();
+            bombInstance.bombElement.remove(); // remove dom element
             for (let i=0; i < this.bombs.length; i++) {
                 if (this.bombs[i] === bombInstance) {
-                    this.bombs.splice(i, 1);
+                    this.bombs.splice(i, 1); // removes the instance at the index of the array
                     i--;
                 }
             }
         }
     }
 
+    // Remove bulletInstance if it's outside the game div
     removeBulletIfOutside(bulletInstance) {
         this.gameElmWidth = document.getElementById("game").offsetWidth;
         if (bulletInstance.positionY >= this.gameElmHeight + (bulletInstance.height / 2)) {
@@ -181,6 +193,7 @@ class Game {
         }
     }
     
+    // Remove Plane if hit by bulletInstance
     detectBulletHitsPlane(bulletInstance) {
         this.planes.forEach((planeInstance) => {
             if (
@@ -216,6 +229,7 @@ class Game {
         
     }
 
+    // Game Over if a bombInstance hits the Player
     detectBombHitsPlayer(bombInstance) {
         if (
             this.player.positionX < bombInstance.positionX + bombInstance.width &&
@@ -223,20 +237,28 @@ class Game {
             this.player.positionY < bombInstance.positionY + bombInstance.height &&
             this.player.height + this.player.positionY > bombInstance.positionY
         ) {
-            this.planes = [];
-            this.bullets = [];
-            this.bombs = [];
-            clearInterval(this.intervalPlaneId);
-            clearInterval(this.intervalPlaneMoveId);
-            clearInterval(this.intervalBombId);
-            clearInterval(this.intervalBombMoveId);
-            clearInterval(this.intervalBulletId);
             this.gameOver();
         }
     }
 
+    // Clears Intervals, arrays and DOM elements
     gameOver() {
+        // set gameStatus
+        this.gameStatus = false;
+        // remove array elements
+        this.planes = [];
+        this.bullets = [];
+        this.bombs = [];
+        // clear Intervals
+        clearInterval(this.intervalPlaneId);
+        clearInterval(this.intervalPlaneMoveId);
+        clearInterval(this.intervalBombId);
+        clearInterval(this.intervalBombMoveId);
+        clearInterval(this.intervalBulletId);
+        clearInterval(this.intervalBulletMoveId);
+        // show Play Again div
         this.restartElement.style.display = "block";
+        // remove all other DOM elements
         Array.from(document.querySelectorAll(".bomb")).forEach((el) => el.parentNode.removeChild(el));
         Array.from(document.querySelectorAll(".plane")).forEach((el) => el.parentNode.removeChild(el));
         Array.from(document.querySelectorAll(".bullet")).forEach((el) => el.parentNode.removeChild(el));
@@ -245,6 +267,7 @@ class Game {
     
 }
 
+// The main dude that is going to get the evil bunnies
 class Player {
     constructor() {
         this.gameElm = document.getElementById("game");
@@ -290,6 +313,7 @@ class Player {
     }
 }
 
+// Bullets for the main dude
 class Bullet {
     constructor() {
         this.gameElm = document.getElementById("game");
@@ -299,12 +323,11 @@ class Bullet {
         this.playerElmWidth = this.playerElm.offsetWidth;
         this.playerElmHeight = this.playerElm.offsetHeight;
         this.playerElmPositionX = this.playerElm.offsetLeft;
-        this.width = 6;
-        this.height = 15;
+        this.width = 10;
+        this.height = 17;
         this.positionX = this.playerElmPositionX + (this.playerElmWidth / 2);
         this.positionY = this.playerElmHeight / 2;
-        this.movementAmount = 10;
-        this.maxMovementAmount = 15;
+        this.movementAmount = 2;
 
         this.bulletElement = null;
         this.createBulletElement();
@@ -318,15 +341,13 @@ class Bullet {
         this.bulletElement.style.left = this.positionX + "px";
         this.gameElm.appendChild(this.bulletElement);
     }
-    shoot() {
-        if (this.movementAmount < this.maxMovementAmount) {
-            this.movementAmount++;
-        }
+    moveUp() {
         this.positionY = this.positionY + this.movementAmount;
         this.bulletElement.style.bottom = this.positionY + "px";
     }
 }
 
+// Evil bunny planes
 class Plane {
     constructor() {
         this.gameElm = document.getElementById("game");
@@ -334,7 +355,10 @@ class Plane {
         this.gameElmHeight = this.gameElm.offsetHeight;
         this.width = 180;
         this.height = 150;
-        this.positionX = -190;
+        this.positionXLeft = 0 - this.width;
+        this.positionXRight = this.gameElmWidth + this.width;
+        this.positionArray = [this.positionXLeft, this.positionXRight]; // left/right position array
+        this.positionX = this.positionArray[Math.floor(Math.random() * this.positionArray.length)]; // randomly select a position to start from the array
         this.positionY = Math.floor(Math.random() * ((this.gameElmHeight - this.height) - (this.gameElmHeight / 2) + 1) + (this.gameElmHeight / 2));
         this.movementAmount = Math.floor(Math.random() * (5 - 1 + 1) + 1);
 
@@ -343,19 +367,32 @@ class Plane {
     }
     createPlaneElement() {
         this.planeElement = document.createElement('div');
-        this.planeElement.className = "plane";
+        if (this.positionX > this.gameElmWidth) {
+            this.planeElement.className = "plane move-right";
+            this.planeElement.style.background = `url('./images/plane_rl_green.png') no-repeat`;
+            this.movementDirection = "right";
+        } else if (this.positionX < 0) {
+            this.planeElement.className = "plane move-left";
+            this.planeElement.style.background = `url('./images/plane_lr_blue.png') no-repeat`;
+            this.movementDirection = "left";
+        }
         this.planeElement.style.width = this.width + "px";
         this.planeElement.style.height = this.height + "px";
         this.planeElement.style.bottom = this.positionY + "px";
-        this.planeElement.style.left = this.positionX - this.width + "px";
+        this.planeElement.style.left = this.positionX + "px";
         this.gameElm.appendChild(this.planeElement);
     }
-    moveLeft() {
-        this.positionX = this.positionX + this.movementAmount;
+    move() {
+        if (this.movementDirection === "right") {
+            this.positionX = this.positionX - this.movementAmount;
+        } else if (this.movementDirection === "left"){
+            this.positionX = this.positionX + this.movementAmount;
+        }
         this.planeElement.style.left = this.positionX + "px";
     }
 }
 
+// Evil bunny plane bombs!
 class Bomb {
     constructor(plane) {
         this.gameElm = document.getElementById("game");
@@ -397,8 +434,10 @@ const startButton = document.getElementById("start-button");
 const restartButton = document.getElementById("restart-button");
 
 startButton.addEventListener("click", () => {
+    game.gameStatus = true;
     game.start();
 });
 restartButton.addEventListener("click", () => {
+    game.gameStatus = true;
     game.start();
 });
