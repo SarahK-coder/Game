@@ -14,14 +14,17 @@ class Game {
         this.time = 0;
         // score div
         this.score = 0;
+        this.scoringElement = document.createElement('div');
+        this.scoringElement.id = "scoring";
+        this.gameElm.appendChild(this.scoringElement);
         this.scoreMainElement = document.createElement('div');
         this.scoreMainElement.id = "score-box";
         this.scoreMainElement.innerHTML = `<span>Points: </span>`;
-        this.gameElm.appendChild(this.scoreMainElement);
+        this.scoringElement.appendChild(this.scoreMainElement);
         this.scoreElement = document.createElement('div');
         this.scoreElement.id = "score";
         this.scoreElement.innerText = this.score;
-        this.scoreMainElement.appendChild(this.scoreElement);
+        this.scoreMainElement.appendChild(this.scoreElement);        
 
         this.planes = [];
         this.randomPlaneInterval = Math.floor(Math.random() * (200 - 100 + 1) + 100);
@@ -122,6 +125,7 @@ class Game {
             });
         });
 
+        
     }
 
     // Player eventlistener
@@ -202,6 +206,7 @@ class Game {
                 planeInstance.positionY < bulletInstance.positionY + bulletInstance.height &&
                 planeInstance.height + planeInstance.positionY > bulletInstance.positionY
             ) {
+                // Add to the score DOM element
                 if (typeof this.scoreElement.innerText === "string") {
                     this.score = Number(this.score);
                     this.score++;
@@ -210,14 +215,41 @@ class Game {
                     this.score++;
                     this.scoreElement.innerText = this.score;
                 }
+                // Remove plane DOM element
                 planeInstance.planeElement.remove();
+                // Get Plane position and display explosion briefly
+                this.planePositionX = planeInstance.positionX;
+                this.planePositionY = planeInstance.positionY;
+                this.planeWidth = planeInstance.width;
+                this.planeHeight = planeInstance.height;
+                this.explosionElement = document.createElement('div');
+                this.explosionElement.id = "explosion";
+                this.explosionElement.style.width = this.planeWidth + "px";
+                this.explosionElement.style.height = this.planeHeight + "px";
+                this.explosionElement.style.left = this.planePositionX + "px";
+                this.explosionElement.style.bottom = this.planePositionY + "px";
+                this.explosionElement.style.background = `url('./images/bang.png') no-repeat`;
+                this.explosionElement.style.backgroundSize = "contain";
+                
+
+                
+                //this.intervalExplosionId = setInterval(() => {
+                this.gameElm.appendChild(this.explosionElement);
+                //}, 10);
+                this.explosionTimeout = setTimeout(() => {
+                    this.explosionElement.remove();
+                }, 500);              
+                
+                // Remove this planeInstance in plane Array
                 for (let i=0; i < this.planes.length; i++) {
                     if (this.planes[i] === planeInstance) {
                         this.planes.splice(i, 1);
                         i--;
                     }
                 }
+                // Remove bullet DOM element
                 bulletInstance.bulletElement.remove();
+                // Remove this bulletInstance in bullet Array
                 for (let i=0; i <this.bullets.length; i++) {
                     if (this.bullets[i] === bulletInstance) {
                         this.bullets.splice(i, 1);
@@ -262,6 +294,7 @@ class Game {
         Array.from(document.querySelectorAll(".bomb")).forEach((el) => el.parentNode.removeChild(el));
         Array.from(document.querySelectorAll(".plane")).forEach((el) => el.parentNode.removeChild(el));
         Array.from(document.querySelectorAll(".bullet")).forEach((el) => el.parentNode.removeChild(el));
+        Array.from(document.querySelectorAll("#explosion")).forEach((el) => el.parentNode.removeChild(el));
         document.getElementById("player").parentNode.removeChild(document.getElementById("player"));
 	}
     
