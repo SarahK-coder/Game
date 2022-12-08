@@ -61,8 +61,8 @@ body {
 }
 
 .plane {
-  background: url('../images/plane_lr_blue.png') no-repeat;
-  background-size: contain;
+  /*background: url('../images/plane_lr_blue.png') no-repeat;
+  background-size: contain;*/
   position: absolute;
   z-index: 2;
 }
