@@ -9,6 +9,7 @@ Move the Raccoon left and right on the screen to avoid bombs being dropped from 
 ## How to play
 
 <- OR Z -- Moves Raccoon Left
+
 -> OR X -- Moves Raccoon Right
 
 Shooting -- Left Mouse Button 
