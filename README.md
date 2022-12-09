@@ -14,6 +14,8 @@ Move the Raccoon left and right on the screen to avoid bombs being dropped from 
 
 Shooting -- Left Mouse Button 
 
+[Play Raccoons Attack] (https://sarahk-coder.github.io/Game/)
+
 ---
 
 ### Checklist
